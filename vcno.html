@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>vcno — Long Beach video reviews</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F7F6; --card:#FFFFFF; --ink:#16202A; --muted:#5B6873; --line:#D8DEE2;
+  --harbor:#0B6477; --harbor-soft:#DDEEF1; --score:#D94A1A; --rec:#E0262B;
+  --display:"Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E181E; --card:#15232B; --ink:#E8EEF1; --muted:#93A3AE; --line:#27373F;
+    --harbor:#5DB8C8; --harbor-soft:#17333B; --score:#FF7A4D; --rec:#FF4A4F; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E181E; --card:#15232B; --ink:#E8EEF1; --muted:#93A3AE; --line:#27373F;
+  --harbor:#5DB8C8; --harbor-soft:#17333B; --score:#FF7A4D; --rec:#FF4A4F; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+img,video{max-width:100%;display:block}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--harbor);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+
+/* header */
+header.top{padding:36px 0 20px}
+.brandrow{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.wordmark{font-family:var(--display);font-weight:800;font-size:clamp(64px,13vw,132px);line-height:.82;letter-spacing:-.045em;margin:0}
+.wordmark .dot{display:inline-block;width:.16em;height:.16em;border-radius:50%;background:var(--rec);margin-left:.04em;vertical-align:.62em;animation:blink 1.6s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.wordmark .dot{animation:none}}
+.lede{max-width:46ch;margin:14px 0 0;color:var(--muted);font-size:17px}
+.lede strong{color:var(--ink);font-weight:600}
+
+.btn{border:0;border-radius:999px;padding:11px 20px;font-weight:600;cursor:pointer;background:var(--ink);color:var(--paper);display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+.btn.harbor{background:var(--harbor);color:#fff}
+.btn.rec{background:var(--rec);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 0 22px;border-top:1.5px solid var(--ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;flex:1 1 auto}
+.chip{border:0;background:transparent;box-shadow:inset 0 0 0 1.5px var(--line);border-radius:999px;padding:7px 14px;cursor:pointer;font-size:14px;font-weight:500;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);box-shadow:none}
+select.sel{border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:8px 10px;font-size:14px;min-height:40px}
+
+/* place list */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px;padding-bottom:60px}
+.tile{background:var(--card);border-radius:18px;overflow:hidden;cursor:pointer;border:0;padding:0;text-align:left;display:flex;flex-direction:column;box-shadow:0 0 0 1px var(--line)}
+.tile:hover .thumb video{transform:scale(1.03)}
+.thumb{aspect-ratio:4/3;background:var(--harbor-soft);position:relative;overflow:hidden}
+.thumb video{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.thumb .empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--harbor);font-weight:600;font-size:14px;padding:16px;text-align:center}
+.tbody{padding:14px 16px 16px;display:flex;justify-content:space-between;gap:12px;align-items:flex-end}
+.tname{font-family:var(--display);font-weight:700;font-size:21px;line-height:1.1;margin:0 0 6px;letter-spacing:-.01em}
+.tmeta{font-size:13px;color:var(--muted)}
+.score{font-family:var(--display);font-weight:800;color:var(--score);font-variant-numeric:tabular-nums;letter-spacing:-.04em;line-height:.85}
+.tile .score{font-size:46px}
+.score.none{color:var(--line)}
+.count{font-size:12px;color:var(--muted);text-align:right;margin-top:4px;white-space:nowrap}
+
+.notice{padding:40px 0 80px;color:var(--muted);max-width:52ch}
+.notice h2{font-family:var(--display);color:var(--ink);font-size:28px;margin:0 0 8px}
+
+/* dialogs */
+dialog{border:0;padding:0;border-radius:22px;background:var(--card);color:var(--ink);width:min(720px,calc(100vw - 24px));max-height:calc(100dvh - 24px);box-shadow:0 30px 80px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(10,20,26,.6)}
+.dhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:22px 22px 10px;position:sticky;top:0;background:var(--card);z-index:2}
+.dhead h2{font-family:var(--display);font-size:30px;line-height:1.05;margin:0;letter-spacing:-.02em}
+.x{border:0;background:var(--harbor-soft);color:var(--ink);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:20px;flex:none}
+.dbody{padding:6px 22px 24px}
+
+.placehead{display:flex;align-items:flex-end;gap:18px;margin:4px 0 18px}
+.placehead .score{font-size:84px}
+.placehead .sub{color:var(--muted);font-size:14px;padding-bottom:6px}
+.review{display:grid;grid-template-columns:minmax(0,220px) 1fr;gap:16px;padding:18px 0;border-top:1px solid var(--line)}
+.review video{width:100%;border-radius:12px;background:#000;aspect-ratio:3/4;object-fit:cover}
+.review .score{font-size:44px}
+.review .who{font-weight:600}
+.review .when{color:var(--muted);font-size:13px}
+.review p{margin:8px 0 0;overflow-wrap:anywhere}
+.linkbtn{border:0;background:none;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:13px;margin-top:10px}
+@media (max-width:560px){.review{grid-template-columns:1fr}.review video{aspect-ratio:auto;max-height:60vh}}
+
+/* recorder */
+.finder{position:relative;background:#000;border-radius:16px;overflow:hidden;aspect-ratio:3/4;max-height:56dvh;margin:0 auto}
+.finder video{width:100%;height:100%;object-fit:cover}
+.finder .corner{position:absolute;width:26px;height:26px;border-color:rgba(255,255,255,.85);border-style:solid;border-width:0}
+.c1{top:14px;left:14px;border-top-width:3px!important;border-left-width:3px!important}
+.c2{top:14px;right:14px;border-top-width:3px!important;border-right-width:3px!important}
+.c3{bottom:14px;left:14px;border-bottom-width:3px!important;border-left-width:3px!important}
+.c4{bottom:14px;right:14px;border-bottom-width:3px!important;border-right-width:3px!important}
+.hud{position:absolute;top:18px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;border-radius:999px;padding:4px 12px;font-variant-numeric:tabular-nums;font-weight:600;display:flex;gap:8px;align-items:center}
+.hud i{width:10px;height:10px;border-radius:50%;background:var(--rec);opacity:0}
+.hud.on i{opacity:1;animation:blink 1s steps(1) infinite}
+.finder .idle{position:absolute;inset:0;display:grid;place-items:center;color:#cfd8dc;text-align:center;padding:24px;font-size:15px}
+
+.meter{margin:14px 0 6px;position:relative;height:10px;border-radius:99px;background:var(--harbor-soft)}
+.meter .fill{position:absolute;inset:0 auto 0 0;width:0;border-radius:99px;background:var(--muted)}
+.meter .fill.ok{background:var(--harbor)}
+.meter .notch{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);left:25%}
+.meterlabels{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);position:relative}
+.meterlabels span:nth-child(2){position:absolute;left:25%;transform:translateX(-50%)}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:16px}
+.msg{min-height:1.5em;margin:10px 0 0;font-size:14px;color:var(--muted)}
+.msg.err{color:var(--rec)}
+.upl{font-size:14px;color:var(--muted);margin-top:14px}
+.upl label{color:var(--harbor);text-decoration:underline;cursor:pointer;font-weight:600}
+.upl input{position:absolute;width:1px;height:1px;opacity:0}
+
+.rater{margin:20px 0 6px;padding:18px;border-radius:16px;background:var(--harbor-soft)}
+.rater .row{display:flex;align-items:center;gap:14px}
+.rater .score{font-size:92px;min-width:3.1ch}
+.rater .ctl{flex:1;display:flex;flex-direction:column;gap:10px}
+input[type=range]{width:100%;accent-color:var(--score);height:32px}
+.steppers{display:flex;gap:8px}
+.steppers button{border:0;background:var(--card);border-radius:10px;min-width:56px;min-height:40px;cursor:pointer;font-weight:600}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+label.f{display:block;font-weight:600;font-size:14px;margin:16px 0 6px}
+.inp{width:100%;border:1.5px solid var(--line);background:var(--paper);border-radius:12px;padding:10px 12px;min-height:44px}
+textarea.inp{min-height:84px;resize:vertical}
+.playback{border-radius:16px;background:#000;width:100%;max-height:50dvh}
+.hint{font-size:13px;color:var(--muted);margin-top:4px}
+</style>
+</head>
+<body>
+<header class="top wrap">
+  <div class="brandrow">
+    <div>
+      <h1 class="wordmark">vcno<span class="dot" aria-hidden="true"></span></h1>
+      <p class="lede">Video reviews of Long Beach spots. Every review is a <strong>15 to 60 second video</strong> and a score from <strong>0.0 to 10.0</strong>.</p>
+    </div>
+    <button class="btn" id="addPlaceBtn">+ Add a place</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="filters" role="group" aria-label="Filter places">
+    <div class="chips" id="catChips"></div>
+    <select class="sel" id="hoodSel" aria-label="Neighborhood"></select>
+    <select class="sel" id="sortSel" aria-label="Sort">
+      <option value="top">Top rated</option>
+      <option value="most">Most reviewed</option>
+      <option value="new">Newest reviews</option>
+    </select>
+  </div>
+  <div id="list" class="grid" aria-live="polite"></div>
+  <div id="notice" class="notice" hidden></div>
+</main>
+
+<!-- place detail -->
+<dialog id="placeDlg" aria-labelledby="placeTitle">
+  <div class="dhead"><h2 id="placeTitle"></h2><button class="x" data-close aria-label="Close">×</button></div>
+  <div class="dbody">
+    <div class="placehead">
+      <div class="score" id="placeScore"></div>
+      <div class="sub" id="placeSub"></div>
+    </div>
+    <button class="btn rec" id="reviewBtn">● Record a review</button>
+    <div id="reviewList" style="margin-top:18px"></div>
+  </div>
+</dialog>
+
+<!-- record + rate -->
+<dialog id="recDlg" aria-labelledby="recTitle">
+  <div class="dhead"><h2 id="recTitle">Review</h2><button class="x" data-close aria-label="Close">×</button></div>
+  <div class="dbody">
+    <section id="stepRec">
+      <div class="finder">
+        <video id="live" autoplay muted playsinline></video>
+        <div class="idle" id="finderIdle">Turn on your camera to start. Talk about what you ordered, bought or did, and show it.</div>
+        <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+        <div class="hud" id="hud"><i></i><span id="recTime">0:00</span></div>
+      </div>
+      <div class="meter" aria-hidden="true"><div class="fill" id="meterFill"></div><div class="notch"></div></div>
+      <div class="meterlabels" aria-hidden="true"><span>0s</span><span>15s minimum</span><span>60s max</span></div>
+      <div class="controls">
+        <button class="btn harbor" id="camBtn">Turn on camera</button>
+        <button class="btn rec" id="recBtn" hidden>● Start recording</button>
+        <button class="btn" id="stopBtn" hidden disabled>Stop</button>
+        <button class="btn ghost" id="flipBtn" hidden>Flip camera</button>
+      </div>
+      <p class="msg" id="recMsg" role="status"></p>
+      <p class="upl">Camera not working? <label for="fileIn">Upload a video</label> between 15 and 60 seconds (MP4 or WebM).
+        <input type="file" id="fileIn" accept="video/mp4,video/webm"></p>
+    </section>
+
+    <section id="stepRate" hidden>
+      <video id="playback" class="playback" controls playsinline></video>
+      <div class="controls"><button class="btn ghost" id="retakeBtn">Retake video</button><span class="hint" id="durLabel"></span></div>
+      <div class="rater">
+        <div class="row">
+          <output class="score" id="rateOut" for="rateIn">5.0</output>
+          <div class="ctl">
+            <label for="rateIn" style="font-weight:600;font-size:14px">Your score</label>
+            <input type="range" id="rateIn" min="0" max="10" step="0.1" value="5">
+            <div class="scale"><span>0.0</span><span>5.0</span><span>10.0</span></div>
+            <div class="steppers"><button type="button" data-step="-0.1" aria-label="Lower by 0.1">−0.1</button><button type="button" data-step="0.1" aria-label="Raise by 0.1">+0.1</button></div>
+          </div>
+        </div>
+      </div>
+      <label class="f" for="caption">Caption <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <textarea class="inp" id="caption" maxlength="280" placeholder="Got the fish tacos, came back twice this week."></textarea>
+      <div class="controls"><button class="btn rec" id="postBtn">Post review</button></div>
+      <p class="msg" id="postMsg" role="status"></p>
+    </section>
+  </div>
+</dialog>
+
+<!-- add place -->
+<dialog id="addDlg" aria-labelledby="addTitle">
+  <div class="dhead"><h2 id="addTitle">Add a place</h2><button class="x" data-close aria-label="Close">×</button></div>
+  <div class="dbody">
+    <label class="f" for="pName">Name</label>
+    <input class="inp" id="pName" maxlength="80" placeholder="e.g. Belmont Brewing Company">
+    <label class="f" for="pCat">Type</label>
+    <select class="inp" id="pCat"></select>
+    <label class="f" for="pHood">Neighborhood</label>
+    <select class="inp" id="pHood"></select>
+    <div class="controls"><button class="btn" id="savePlaceBtn">Add place</button></div>
+    <p class="msg" id="addMsg" role="status"></p>
+  </div>
+</dialog>
+
+<script>
+const CATS = ["Food","Coffee & drinks","Shops","Things to do","Nightlife","Services"];
+const HOODS = ["Downtown","Alamitos Beach","Belmont Shore","Naples","Retro Row / 4th St","Bixby Knolls","Cal Heights","Wrigley","Zaferia","Los Altos","East Long Beach","North Long Beach","Westside","Signal Hill","Other"];
+const MIN_S = 15, MAX_S = 60;
+
+const S = { db:null, assets:null, user:null, me:null, places:[], reviews:[], names:{},
+  cat:"all", hood:"all", sort:"top", openId:null, ready:false };
+const $ = id => document.getElementById(id);
+const fmt = n => (Math.round(n*10)/10).toFixed(1);
+
+/* ---------- static UI ---------- */
+function buildFilters(){
+  const chips = $("catChips");
+  ["all",...CATS].forEach(c=>{
+    const b=document.createElement("button"); b.className="chip"; b.textContent=c==="all"?"Everything":c;
+    b.setAttribute("aria-pressed", String(c===S.cat));
+    b.onclick=()=>{S.cat=c; chips.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed", String(x===b))); render();};
+    chips.appendChild(b);
+  });
+  const hs=$("hoodSel"); hs.add(new Option("All neighborhoods","all"));
+  HOODS.forEach(h=>hs.add(new Option(h,h)));
+  hs.onchange=()=>{S.hood=hs.value; render();};
+  $("sortSel").onchange=e=>{S.sort=e.target.value; render();};
+  CATS.forEach(c=>$("pCat").add(new Option(c,c)));
+  HOODS.forEach(h=>$("pHood").add(new Option(h,h)));
+}
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest("dialog").close());
+
+/* ---------- data ---------- */
+function stats(){
+  const m={};
+  for(const r of S.reviews){
+    const s=m[r.placeId]||(m[r.placeId]={sum:0,n:0,latest:null});
+    s.sum+=Number(r.rating)||0; s.n++;
+    if(!s.latest||r.createdAt>s.latest.createdAt) s.latest=r;
+  }
+  return m;
+}
+function ago(t){
+  const s=(Date.now()-t)/1000;
+  if(s<60) return "just now";
+  if(s<3600) return Math.floor(s/60)+" min ago";
+  if(s<86400) return Math.floor(s/3600)+" hr ago";
+  if(s<86400*30) return Math.floor(s/86400)+" days ago";
+  return new Date(t).toLocaleDateString();
+}
+async function fillNames(){
+  const els=[...document.querySelectorAll("[data-author]")];
+  if(S.user){
+    const need=[...new Set(els.map(e=>e.dataset.author))].filter(id=>!(id in S.names));
+    if(need.length){
+      try{
+        const ps=await S.user.profiles(need);
+        for(const id of need){
+          const p=Array.isArray(ps)?ps.find(x=>x.id===id):ps&&ps[id];
+          S.names[id]=(p&&p.name)||"";
+        }
+      }catch(e){}
+    }
+  }
+  els.forEach(e=>{const id=e.dataset.author; e.textContent=(S.me&&id===S.me)?"You":(S.names[id]||"A reviewer");});
+}
+
+/* ---------- render list ---------- */
+function render(){
+  const list=$("list"), st=stats();
+  if(!S.ready) return;
+  let ps=S.places.filter(p=>(S.cat==="all"||p.category===S.cat)&&(S.hood==="all"||p.neighborhood===S.hood));
+  const avg=p=>st[p.id]?st[p.id].sum/st[p.id].n:-1;
+  if(S.sort==="top") ps.sort((a,b)=>avg(b)-avg(a)||a.name.localeCompare(b.name));
+  if(S.sort==="most") ps.sort((a,b)=>((st[b.id]||{}).n||0)-((st[a.id]||{}).n||0));
+  if(S.sort==="new") ps.sort((a,b)=>(((st[b.id]||{}).latest||{}).createdAt||0)-(((st[a.id]||{}).latest||{}).createdAt||0));
+  list.textContent="";
+  const notice=$("notice");
+  if(!S.places.length){
+    notice.hidden=false;
+    notice.innerHTML="<h2>No places yet</h2><p>Add the first Long Beach spot, then record a review of it.</p>";
+    return;
+  }
+  if(!ps.length){ notice.hidden=false; notice.innerHTML="<h2>Nothing here</h2><p>No places match these filters. Try another neighborhood or type, or add the place yourself.</p>"; return; }
+  notice.hidden=true;
+  for(const p of ps){
+    const s=st[p.id];
+    const t=document.createElement("button"); t.className="tile"; t.type="button";
+    t.setAttribute("aria-label", p.name+(s?", score "+fmt(s.sum/s.n)+" from "+s.n+" reviews":", no reviews yet"));
+    const th=document.createElement("div"); th.className="thumb";
+    if(s&&s.latest&&s.latest.videoId){
+      const v=document.createElement("video"); v.muted=true; v.playsInline=true; v.preload="metadata";
+      v.src="/_blob/"+s.latest.videoId+"#t=0.5"; th.appendChild(v);
+    }else{ const e=document.createElement("div"); e.className="empty"; e.textContent="No videos yet. Be the first."; th.appendChild(e); }
+    const b=document.createElement("div"); b.className="tbody";
+    const left=document.createElement("div");
+    const n=document.createElement("h3"); n.className="tname"; n.textContent=p.name;
+    const m=document.createElement("div"); m.className="tmeta"; m.textContent=p.category+", "+p.neighborhood;
+    left.append(n,m);
+    const right=document.createElement("div");
+    const sc=document.createElement("div"); sc.className="score"+(s?"":" none"); sc.textContent=s?fmt(s.sum/s.n):"–";
+    const c=document.createElement("div"); c.className="count"; c.textContent=s?(s.n+(s.n===1?" review":" reviews")):"";
+    right.append(sc,c); b.append(left,right); t.append(th,b);
+    t.onclick=()=>openPlace(p.id);
+    list.appendChild(t);
+  }
+  if(S.openId&&$("placeDlg").open) renderPlace();
+}
+
+/* ---------- place detail ---------- */
+function openPlace(id){ S.openId=id; renderPlace(); $("placeDlg").showModal(); }
+function renderPlace(){
+  const p=S.places.find(x=>x.id===S.openId); if(!p) return;
+  const rs=S.reviews.filter(r=>r.placeId===p.id).sort((a,b)=>b.createdAt-a.createdAt);
+  $("placeTitle").textContent=p.name;
+  const avg=rs.length?rs.reduce((a,r)=>a+Number(r.rating),0)/rs.length:null;
+  const ps=$("placeScore"); ps.textContent=avg===null?"–":fmt(avg); ps.className="score"+(avg===null?" none":"");
+  $("placeSub").textContent=p.category+", "+p.neighborhood+". "+(rs.length?rs.length+(rs.length===1?" video review":" video reviews"):"No reviews yet");
+  const box=$("reviewList"); box.textContent="";
+  for(const r of rs){
+    const row=document.createElement("article"); row.className="review";
+    const v=document.createElement("video"); v.controls=true; v.playsInline=true; v.preload="metadata"; v.src="/_blob/"+r.videoId;
+    const info=document.createElement("div");
+    const sc=document.createElement("div"); sc.className="score"; sc.textContent=fmt(r.rating);
+    const who=document.createElement("div"); who.className="who"; who.dataset.author=r.author||""; who.textContent="…";
+    const when=document.createElement("div"); when.className="when"; when.textContent=ago(r.createdAt)+(r.durationSec?", "+Math.round(r.durationSec)+"s video":"");
+    info.append(sc,who,when);
+    if(r.caption){const cp=document.createElement("p"); cp.textContent=r.caption; info.appendChild(cp);}
+    if(S.me&&r.author===S.me){
+      const del=document.createElement("button"); del.className="linkbtn"; del.textContent="Delete my review";
+      del.onclick=()=>deleteReview(r); info.appendChild(del);
+    }
+    row.append(v,info); box.appendChild(row);
+  }
+  fillNames();
+}
+async function deleteReview(r){
+  if(!confirm("Delete your review? The video will be removed.")) return;
+  try{
+    await S.db.doc("reviews/"+r.id).delete();
+    if(S.assets&&r.videoId){ try{await S.assets.delete(r.videoId);}catch(e){} }
+  }catch(e){ alert("Couldn't delete the review. Try again in a moment."); }
+}
+
+/* ---------- add place ---------- */
+$("addPlaceBtn").onclick=()=>{ $("addMsg").textContent=""; $("pName").value=""; $("addDlg").showModal(); $("pName").focus(); };
+$("savePlaceBtn").onclick=async()=>{
+  const name=$("pName").value.trim(), msg=$("addMsg");
+  msg.className="msg";
+  if(!S.db){ msg.className="msg err"; msg.textContent="Places can't be saved in this view. Open vcno inside Claude."; return; }
+  if(name.length<2){ msg.className="msg err"; msg.textContent="Enter the place's name."; return; }
+  const dupe=S.places.find(p=>p.name.toLowerCase()===name.toLowerCase());
+  if(dupe){ $("addDlg").close(); openPlace(dupe.id); return; }
+  $("savePlaceBtn").disabled=true;
+  try{
+    const ref=await S.db.collection("places").add({name, category:$("pCat").value, neighborhood:$("pHood").value, createdBy:S.me||null, createdAt:Date.now()});
+    $("addDlg").close(); openPlace(ref.id);
+  }catch(e){
+    msg.className="msg err";
+    msg.textContent=e&&e.code==="quota_exceeded"?"vcno is full. Remove unused places before adding more.":"Couldn't add the place. You may have view-only access.";
+  }finally{ $("savePlaceBtn").disabled=false; }
+};
+
+/* ---------- recording ---------- */
+const R={stream:null, rec:null, chunks:[], t0:0, timer:null, facing:"user", blob:null, type:"", dur:0, url:null};
+function pickType(){
+  const opts=["video/mp4;codecs=avc1,mp4a","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
+  if(!window.MediaRecorder) return "";
+  return opts.find(t=>{try{return MediaRecorder.isTypeSupported(t)}catch(e){return false}})||"";
+}
+function setMeter(sec){
+  const f=$("meterFill"); f.style.width=Math.min(100,sec/MAX_S*100)+"%"; f.classList.toggle("ok",sec>=MIN_S);
+  const s=Math.floor(sec); $("recTime").textContent=Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+}
+function recMsg(t,err){ const m=$("recMsg"); m.textContent=t; m.className="msg"+(err?" err":""); }
+function stopStream(){ if(R.stream){R.stream.getTracks().forEach(t=>t.stop()); R.stream=null;} $("live").srcObject=null; }
+
+$("reviewBtn").onclick=()=>{
+  const p=S.places.find(x=>x.id===S.openId); if(!p) return;
+  $("recTitle").textContent="Review "+p.name;
+  resetRecorder(); $("recDlg").showModal();
+  if(!S.assets){ recMsg("Posting videos needs edit access to vcno. Ask the page owner to give you \"Can edit\" access.", true); $("camBtn").disabled=true; $("fileIn").disabled=true; }
+};
+$("recDlg").addEventListener("close",()=>{ if(R.rec&&R.rec.state!=="inactive"){R.discard=true; R.rec.stop();} clearInterval(R.timer); stopStream(); });
+
+function resetRecorder(){
+  clearInterval(R.timer); stopStream();
+  if(R.url){URL.revokeObjectURL(R.url); R.url=null;}
+  R.blob=null; R.dur=0; R.discard=false;
+  $("stepRec").hidden=false; $("stepRate").hidden=true;
+  $("camBtn").hidden=false; $("camBtn").disabled=false; $("recBtn").hidden=true; $("stopBtn").hidden=true; $("flipBtn").hidden=true;
+  $("finderIdle").hidden=false; $("hud").classList.remove("on"); $("fileIn").disabled=false; $("fileIn").value="";
+  setMeter(0); recMsg("");
+  $("rateIn").value=5; $("rateOut").textContent="5.0"; $("caption").value=""; $("postMsg").textContent="";
+}
+async function startCam(){
+  recMsg("");
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ recMsg("This browser can't use the camera here. Upload a video instead.", true); return; }
+  try{
+    stopStream();
+    R.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:R.facing,width:{ideal:720},height:{ideal:960}},audio:true});
+    $("live").srcObject=R.stream; $("finderIdle").hidden=true;
+    $("camBtn").hidden=true; $("recBtn").hidden=false; $("flipBtn").hidden=false;
+  }catch(e){
+    recMsg(e&&e.name==="NotAllowedError"?"Camera access was blocked. Allow camera and microphone in your browser, or upload a video instead.":"Couldn't start the camera. Upload a video instead.", true);
+  }
+}
+$("camBtn").onclick=startCam;
+$("flipBtn").onclick=()=>{ R.facing=R.facing==="user"?"environment":"user"; startCam(); };
+$("recBtn").onclick=()=>{
+  const mime=pickType();
+  if(!mime){ recMsg("This browser can't record video. Upload a video instead.", true); return; }
+  R.type=mime.split(";")[0]; R.chunks=[]; R.discard=false;
+  try{ R.rec=new MediaRecorder(R.stream,{mimeType:mime, videoBitsPerSecond:1500000}); }
+  catch(e){ recMsg("Recording failed to start. Upload a video instead.", true); return; }
+  R.rec.ondataavailable=e=>{ if(e.data&&e.data.size) R.chunks.push(e.data); };
+  R.rec.onstop=()=>{
+    clearInterval(R.timer); $("hud").classList.remove("on");
+    if(R.discard) return;
+    const dur=(performance.now()-R.t0)/1000;
+    if(dur<MIN_S){ recMsg("That was "+Math.floor(dur)+" seconds. Reviews need at least 15.", true); $("recBtn").hidden=false; $("stopBtn").hidden=true; $("flipBtn").hidden=false; setMeter(0); return; }
+    toRate(new Blob(R.chunks,{type:R.type}), Math.min(dur,MAX_S));
+  };
+  R.rec.start(1000); R.t0=performance.now();
+  $("hud").classList.add("on"); $("recBtn").hidden=true; $("flipBtn").hidden=true; $("stopBtn").hidden=false; $("stopBtn").disabled=true;
+  recMsg("Recording. Keep going for at least 15 seconds.");
+  R.timer=setInterval(()=>{
+    const s=(performance.now()-R.t0)/1000; setMeter(s);
+    if(s>=MIN_S&&$("stopBtn").disabled){ $("stopBtn").disabled=false; recMsg("Minimum reached. Stop any time, or it stops itself at 60 seconds."); }
+    else if(s<MIN_S){ $("stopBtn").textContent="Stop ("+Math.ceil(MIN_S-s)+"s to go)"; }
+    if(s>=MIN_S) $("stopBtn").textContent="Stop";
+    if(s>=MAX_S) R.rec.stop();
+  },200);
+};
+$("stopBtn").onclick=()=>{ if(R.rec&&R.rec.state==="recording") R.rec.stop(); };
+
+function toRate(blob,dur){
+  stopStream();
+  R.blob=blob; R.dur=dur;
+  if(R.url) URL.revokeObjectURL(R.url);
+  R.url=URL.createObjectURL(blob); $("playback").src=R.url;
+  $("durLabel").textContent=Math.round(dur)+" second video";
+  $("stepRec").hidden=true; $("stepRate").hidden=false;
+}
+$("retakeBtn").onclick=()=>{ $("playback").removeAttribute("src"); resetRecorder(); };
+
+/* upload fallback: check type, size and length */
+function videoDuration(file){
+  return new Promise(res=>{
+    const v=document.createElement("video"); v.preload="metadata"; const u=URL.createObjectURL(file);
+    const done=d=>{URL.revokeObjectURL(u); res(d);};
+    v.onloadedmetadata=()=>{
+      if(isFinite(v.duration)) return done(v.duration);
+      v.ondurationchange=()=>{ if(isFinite(v.duration)) done(v.duration); };
+      v.currentTime=1e7;
+    };
+    v.onerror=()=>done(NaN); v.src=u;
+    setTimeout(()=>done(NaN),8000);
+  });
+}
+$("fileIn").onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const type=(f.type||"").split(";")[0];
+  if(type!=="video/mp4"&&type!=="video/webm"){ recMsg("Use an MP4 or WebM video. iPhone .mov files: export or share as MP4 first.", true); return; }
+  if(f.size>20*1024*1024){ recMsg("That file is over 20 MB. Trim or compress it and try again.", true); return; }
+  recMsg("Checking the video…");
+  const d=await videoDuration(f);
+  if(!isFinite(d)){ recMsg("Couldn't read that video's length. Try recording instead.", true); return; }
+  if(d<MIN_S-0.2){ recMsg("That video is "+Math.floor(d)+" seconds. Reviews need at least 15.", true); return; }
+  if(d>MAX_S+0.5){ recMsg("That video is "+Math.round(d)+" seconds. Reviews can be 60 seconds at most.", true); return; }
+  R.type=type; toRate(f,d);
+};
+
+/* rating */
+function setRating(v){ v=Math.max(0,Math.min(10,Math.round(v*10)/10)); $("rateIn").value=v; $("rateOut").textContent=fmt(v); }
+$("rateIn").oninput=e=>setRating(parseFloat(e.target.value));
+document.querySelectorAll("[data-step]").forEach(b=>b.onclick=()=>setRating(parseFloat($("rateIn").value)+parseFloat(b.dataset.step)));
+
+/* post */
+$("postBtn").onclick=async()=>{
+  const msg=$("postMsg"); msg.className="msg";
+  if(!R.blob||R.dur<MIN_S){ msg.className="msg err"; msg.textContent="Record at least 15 seconds first."; return; }
+  if(!S.assets||!S.db){ msg.className="msg err"; msg.textContent="Posting videos needs edit access to vcno."; return; }
+  $("postBtn").disabled=true; msg.textContent="Uploading your video…";
+  try{
+    const up=await S.assets.upload(R.blob,{type:R.type});
+    msg.textContent="Saving your review…";
+    await S.db.collection("reviews").add({
+      placeId:S.openId, rating:Math.round(parseFloat($("rateIn").value)*10)/10,
+      caption:$("caption").value.trim().slice(0,280), videoId:up.id,
+      durationSec:Math.round(R.dur*10)/10, author:S.me||null, createdAt:Date.now()
+    });
+    $("recDlg").close();
+  }catch(e){
+    const c=e&&e.code;
+    msg.className="msg err";
+    msg.textContent=c==="too_large"?"The video is over 20 MB. Record a shorter one."
+      :c==="quota_or_state"?"vcno's video storage is full."
+      :c==="rate_limited"?"Too many uploads at once. Wait a minute and post again."
+      :c==="unsupported_type"?"This video format isn't supported. Use MP4 or WebM."
+      :"Couldn't post the review. Check your connection and post again.";
+  }finally{ $("postBtn").disabled=false; }
+};
+
+/* ---------- boot ---------- */
+buildFilters();
+$("notice").hidden=false; $("notice").innerHTML="<h2>Loading places…</h2>";
+(async()=>{
+  if(!window.claude||!window.claude.use){
+    $("notice").innerHTML="<h2>Open vcno in Claude</h2><p>Reviews and videos load when this page is opened from its Claude link.</p>"; return;
+  }
+  const [db,user,assets]=await Promise.all([claude.use("db"),claude.use("user"),claude.use("assets")]);
+  S.db=db; S.user=user; S.assets=assets;
+  if(user){ try{ S.me=await user.id(); }catch(e){} }
+  if(!db){ $("notice").innerHTML="<h2>Reviews can't load here</h2><p>Open vcno from its Claude link while signed in.</p>"; return; }
+  db.collection("places").limit(1000).onSnapshot(s=>{
+    S.places=s.docs.map(d=>Object.assign({id:d.id},d.data())); S.ready=true; render();
+  },()=>{ $("notice").hidden=false; $("notice").innerHTML="<h2>Places stopped updating</h2><p>Reload the page to reconnect.</p>"; });
+  db.collection("reviews").orderBy("createdAt","desc").limit(1000).onSnapshot(s=>{
+    S.reviews=s.docs.map(d=>Object.assign({id:d.id},d.data())); render();
+  },()=>{});
+})();
+</script>
+</body>
+</html>
